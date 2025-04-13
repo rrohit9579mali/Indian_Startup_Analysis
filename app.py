@@ -42,9 +42,9 @@ def load_overall_analysis():
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric('Total', str(total) + ' Cr')
+        st.metric('Total', str(total) + 'Cr')
     with col2:
-        st.metric('Max', str(max_funding) + ' Cr')
+        st.metric('Max', str(max_funding) + 'Cr')
     with col3:
         st.metric('Avg', str(round(avg_funding)) + ' Cr')
     with col4:
@@ -85,7 +85,7 @@ def load_investor_details(investor):
         st.pyplot(fig)
 
     with col2:
-        verical_series = df[df['investors'].str.contains(investor)].groupby('vertical')['amount'].sum()
+        verical_series = df[df['investors'].str.contains(investor)].groupby('vertical')['amount'].sum().head()
         st.subheader('Sectors invested in')
         if verical_series.empty:
             st.warning("Sector data nahiye.")
