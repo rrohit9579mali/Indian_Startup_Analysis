@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
 st.set_page_config(layout='wide', page_title='StartUp Analysis')
@@ -28,6 +29,78 @@ df.reset_index(drop=True, inplace=True)
 # Create time features
 df['month'] = df['date'].dt.month
 df['year'] = df['date'].dt.year
+
+
+#  starttup information
+def startup_info(name):
+    st.title('StartUp Analysis')
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        # pass  # No content here
+        st.write('Startup Name: ', name)
+    with col2:
+        # Get unique cities for this startup
+        city = df.groupby('startup')['city'].agg(lambda x: ', '.join(set(x)))[name]
+        st.write('City: ', city)
+    with col3:
+        # Get unique verticals for this startup
+        verti = df.groupby('startup')['vertical'].agg(lambda x: ', '.join(set(x)))[name]
+        st.write('Vertical: ', verti)
+
+    # Ensure no 0 or NaN in subvertical before using
+    df['subvertical'] = df['subvertical'].replace(0, np.nan)
+    df['subvertical'] = df['subvertical'].fillna('Education')  # Default subvertical to 'Education' if NaN
+
+    # Subvertical info
+    subvertical = df.groupby('startup')['subvertical'].agg(lambda x: ', '.join(set(x)))[name]
+
+    col4, col5 = st.columns(2)
+    with col4:
+        st.write('Subvertical: ', subvertical)
+
+# startup and investors
+# startup and investors
+def startupandinvestors(name):
+    st.markdown("### Startup + Investor Details")
+    st.markdown("---")
+
+    startup_df = df[df['startup'] == name]
+
+    # All investors list (multiple investors may be in one row)
+    investor_list = startup_df['investors'].str.split(',').explode().str.strip()
+    investor_funding = pd.DataFrame({
+        'investor': investor_list,
+        'amount': startup_df.loc[startup_df.index.repeat(startup_df['investors'].str.count(',') + 1), 'amount'].values
+    })
+
+    # Group by investor to get total funding per investor
+    grouped_investor = investor_funding.groupby('investor')['amount'].sum().sort_values(ascending=False)
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.write("### All Investors of", name)
+        for inv in grouped_investor.index:
+            st.write("•", inv)
+
+    with col2:
+        st.metric(label='Total Unique Investors', value=len(grouped_investor))
+
+    # ✅ Bar Chart: Investor-wise funding
+    st.subheader(f"Funding by Each Investor in '{name}'")
+    if not grouped_investor.empty:
+        fig, ax = plt.subplots()
+        ax.bar(grouped_investor.index, grouped_investor.values, color='orange')
+        ax.set_xlabel('Investor')
+        ax.set_ylabel('Funding Amount (Cr)')
+        ax.set_title(f'Funding Contribution by Investors in {name}')
+        plt.xticks(rotation=45, ha='right')
+        st.pyplot(fig)
+    else:
+        st.warning("No detailed investor data available for this startup.")
+
 
 
 # Overall Analysis
@@ -68,14 +141,16 @@ def load_overall_analysis():
 # Investor Details
 def load_investor_details(investor):
     st.title(investor)
-    last5_df = df[df['investors'].str.contains(investor)].head()[['date', 'startup', 'vertical', 'city', 'round', 'amount']]
+    last5_df = df[df['investors'].str.contains(investor)].head()[
+        ['date', 'startup', 'vertical', 'city', 'round', 'amount']]
     st.subheader('Most Recent Investments')
     st.dataframe(last5_df)
 
     col1, col2 = st.columns(2)
 
     with col1:
-        big_series = df[df['investors'].str.contains(investor)].groupby('startup')['amount'].sum().sort_values(ascending=False).head()
+        big_series = df[df['investors'].str.contains(investor)].groupby('startup')['amount'].sum().sort_values(
+            ascending=False).head()
         st.subheader('Biggest Investments')
         if big_series.empty:
             st.warning("Data nahiye plot sathi.")
@@ -143,10 +218,11 @@ if option == 'Overall Analysis':
     load_overall_analysis()
 
 elif option == 'StartUp':
-    st.sidebar.selectbox('Select StartUp', sorted(df['startup'].unique().tolist()))
+    name = st.sidebar.selectbox('Select StartUp', sorted(df['startup'].unique().tolist()))
     btn1 = st.sidebar.button('Find StartUp Details')
-    st.title('StartUp Analysis')
-
+    if btn1:
+        startup_info(name)
+        startupandinvestors(name)
 elif option == 'Investor':
     selected_investor = st.sidebar.selectbox('Select StartUp', sorted(set(df['investors'].str.split(',').sum())))
     btn2 = st.sidebar.button('Find Investor Details')
