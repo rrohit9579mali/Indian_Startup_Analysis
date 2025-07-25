@@ -15,7 +15,7 @@ df.dropna(subset=['date', 'startup', 'amount', 'investors', 'vertical'], inplace
 df['date'] = pd.to_datetime(df['date'], errors='coerce')
 df.dropna(subset=['date'], inplace=True)
 st.title('Indian Startup Analysis')
-# Ensure amount is numeric
+# Ensure amount is numeric 
 df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
 df.dropna(subset=['amount'], inplace=True)
 
@@ -133,7 +133,7 @@ def load_overall_analysis():
 
     fig3, ax3 = plt.subplots()
     ax3.plot(temp_df['x_axis'], temp_df['amount'])
-
+    plt.xticks(rotation='vertical')
     st.pyplot(fig3)
 
 
