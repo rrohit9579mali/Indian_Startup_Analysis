@@ -14,7 +14,7 @@ df.dropna(subset=['date', 'startup', 'amount', 'investors', 'vertical'], inplace
 # Convert date column
 df['date'] = pd.to_datetime(df['date'], errors='coerce')
 df.dropna(subset=['date'], inplace=True)
-
+st.title('Indian Startup Analysis')
 # Ensure amount is numeric
 df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
 df.dropna(subset=['amount'], inplace=True)
@@ -34,7 +34,6 @@ df['year'] = df['date'].dt.year
 #  starttup information
 def startup_info(name):
     st.title('StartUp Analysis')
-
     col1, col2, col3 = st.columns(3)
 
     with col1:
